@@ -11,21 +11,21 @@ var DownloadUrl = "https://raw.githubusercontent.com/subtosharki/my-prettier-fil
 func main() {
 	resp, err := http.Get(DownloadUrl)
 	if err != nil {
-		println(err)
+		panic(err)
 	}
 	defer func(Body io.ReadCloser) {
 		err := Body.Close()
 		if err != nil {
-			println(err)
+			panic(err)
 		}
 	}(resp.Body)
 	content, err := io.ReadAll(resp.Body)
 	if err != nil {
-		println(err)
+		panic(err)
 	}
 	err = os.WriteFile(".prettierrc", content, 0644)
 	if err != nil {
-		println(err)
+		panic(err)
 	}
 
 	println("Downloaded")
