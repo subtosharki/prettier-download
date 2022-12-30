@@ -1,72 +1,36 @@
 package main
 
 import (
-	"bufio"
 	"bytes"
-	"encoding/json"
+	"github.com/buger/jsonparser"
+	"github.com/tidwall/pretty"
 	"os"
-	"strings"
 )
 
 func AddScriptToJSON() {
 	println("Adding script to package.json")
-	file, err := os.Open("package.json")
+	file, err := os.ReadFile("package.json")
 	if err != nil {
 		panic(err)
 	}
-	defer func(file *os.File) {
-		err := file.Close()
-		if err != nil {
-			panic(err)
-		}
-	}(file)
-	scanner := bufio.NewScanner(file)
-	scanner.Split(bufio.ScanLines)
-	var lines []string
-	for scanner.Scan() {
-		lines = append(lines, scanner.Text())
+	formatScript := `"prettier --write \"src/**/*.ts\""`
+	scripts, _, _, err := jsonparser.Get(file, "scripts")
+	if err != nil {
+		println(`"scripts" field not found in package.json, skipping`)
+		return
 	}
-	formatField := `"format": "prettier --write \"src/**/*.ts\""`
-	for i, line := range lines {
-		if strings.Contains(line, `"scripts": {}`) {
-			copy(lines[i+1:], lines[i:])
-			lines = append(lines, "}")
-			lines[i] = `"scripts": {`
-			lines[i+1] = formatField + "},"
-			break
-		} else if strings.Contains(line, `"scripts": {`) {
-			for _, line := range lines {
-				if strings.Contains(line, formatField) {
-					println("Script already exists, skipping")
-					return
-				}
-			}
-			if !strings.Contains(lines[i+1], "}") {
-				lines[i+1] = formatField
-			} else {
-				copy(lines[i+1:], lines[i:])
-				lines[i+1] = formatField
-				if lines[i+2] != "}" {
-					lines = append(lines, "}")
-				}
-			}
-			break
-		} else if line == "}" {
-			lines = append(lines, formatField, "}")
-			lines[i] = `,"scripts": {`
-			break
-		}
+	if bytes.Contains(scripts, []byte(`"format"`)) {
+		println(`"format" script already exists, skipping`)
+		return
 	}
-	finalJSON := strings.Join(lines, ""+"")
-	finalJSONBuffer := bytes.Buffer{}
-	err = json.Indent(&finalJSONBuffer, []byte(finalJSON), "", "    ")
+	file, err = jsonparser.Set(file, []byte(formatScript), "scripts", "format")
 	if err != nil {
 		panic(err)
 	}
-	err = os.WriteFile("package.json", []byte(finalJSONBuffer.String()), 0644)
+	file = pretty.Pretty(file)
+	err = os.WriteFile("package.json", file, 0644)
 	if err != nil {
 		panic(err)
 	}
 	println("Script added to package.json")
-
 }
