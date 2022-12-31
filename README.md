@@ -1,5 +1,5 @@
 # prettier-download
-A go program that downloads my `.prettierrc` file to my current directory, then adds my format script to my `package.json` file. 
+A go program that downloads my `.prettierrc` file to my current directory, adds my format script to my `package.json` file, then downloads the prettier package with the package manager im using at the moment.
 
 This is for personal use but can easily be customized to your needs by doing the following:
 
