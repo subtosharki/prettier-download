@@ -18,4 +18,12 @@ func main() {
 	} else {
 		AddScriptToJSON()
 	}
+
+	_, err = os.Stat("node_modules/prettier")
+	if err == nil {
+		println("Prettier found, skipping installation")
+	} else {
+		DownloadPrettier()
+	}
+
 }
